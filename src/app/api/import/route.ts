@@ -63,6 +63,10 @@ export async function POST(req: NextRequest) {
   const cats = await db.select().from(schema.categories);
   const existingTxs = await db.select().from(schema.transactions);
   const examples = existingTxs.filter((t: any) => t.categoryId).map((t: any) => ({ description: t.description, categoryId: t.categoryId }));
+  // Track existing keys for duplicate detection (avoid O(n²) reloads per row).
+  const seenKeys = new Set(
+    existingTxs.map((e: any) => `${e.accountId}|${e.date}|${e.amount}|${e.type}|${e.description}`)
+  );
   const parsed = Papa.parse<Record<string, string>>(text, {
     header: true,
     skipEmptyLines: true,
@@ -108,25 +112,27 @@ export async function POST(req: NextRequest) {
       const suggested = suggestCategoryId(description, cats as any, examples);
 
       // duplicate check: same account, date, amount, type, description
-      const existing = await db.select().from(schema.transactions);
-      const isDup = existing.some((e: any) =>
-        e.accountId === accountId &&
-        e.date === date &&
-        e.amount === amountCents &&
-        e.type === type &&
-        e.description === description
-      );
-      if (isDup) { skipped++; continue; }
+      const key = `${accountId}|${date}|${amountCents}|${type}|${description}`;
+      if (seenKeys.has(key)) { skipped++; continue; }
 
-      await db.insert(schema.transactions).values({
-        accountId,
-        date,
-        amount: amountCents,
-        type,
-        description,
-        categoryId: suggested,
-      });
-      imported++;
+      try {
+        await db.insert(schema.transactions).values({
+          accountId,
+          date,
+          amount: amountCents,
+          type,
+          description,
+          categoryId: suggested,
+        });
+        seenKeys.add(key);
+        imported++;
+      } catch (e: any) {
+        if (String(e?.message || "").toLowerCase().includes("unique")) {
+          skipped++;
+          continue;
+        }
+        throw e;
+      }
     } catch (e: any) {
       errors.push(e?.message ?? String(e));
     }

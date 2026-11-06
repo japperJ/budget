@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
 export const accounts = sqliteTable("accounts", {
@@ -27,7 +27,9 @@ export const transactions = sqliteTable("transactions", {
   description: text("description").notNull().default(""),
   categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-});
+}, (t) => ({
+  uniqTx: uniqueIndex("uniq_tx").on(t.accountId, t.date, t.amount, t.type, t.description),
+}));
 
 export const budgets = sqliteTable("budgets", {
   id: integer("id").primaryKey({ autoIncrement: true }),
