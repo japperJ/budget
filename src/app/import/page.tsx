@@ -96,15 +96,16 @@ export default function ImportPage() {
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-6">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-slate-500 dark:text-slate-400" />
-              <p className="font-medium text-slate-700 dark:text-slate-200">Understøttede kolonner</p>
+              <p className="font-medium text-slate-700 dark:text-slate-200">Understøttede formater</p>
             </div>
             <ul className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-300">
-              <li>Dato (dato, date, valørdato)</li>
-              <li>Beløb (beløb, amount, sum) – negativt = udgift</li>
-              <li>Beskrivelse (tekst, beskrivelse, description, merchant)</li>
-              <li>Alternativt: separate kolonner &quot;træk&quot; / &quot;indbetaling&quot;</li>
+              <li><strong>Danske Bank:</strong> Dato, Tekst, Beløb (signed), Saldo</li>
+              <li><strong>Nordea:</strong> Bogføringsdato/Valørdato, Tekst/Posteringstekst, Beløb eller separate Debet/Kredit, Saldo</li>
+              <li>Datoformater: DD-MM-YYYY, DD.MM.YYYY, DD/MM/YYYY</li>
+              <li>Talformater: 1.234,56 (dansk) og 1234.56</li>
+              <li>Kolonner genkendes automatisk (dato, beløb, beskrivelse, træk/indbetaling, debet/kredit)</li>
             </ul>
-            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Danske talformater (1.234,56) og datoformater (DD-MM-YYYY) understøttes.</p>
+            <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">Semikolon- eller kommasepareret CSV. UTF-8 understøttes.</p>
           </div>
         </div>
       </div>

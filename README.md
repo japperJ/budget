@@ -6,7 +6,7 @@ Webapp til styring af banktransaktioner, budget og cashflow. Dansk sprog og DKK.
 - Dashboard med cashflow-graf (6 måneder) og udgifter pr. kategori
 - Transaktionsliste med filtrering, søgning og kategorisering
 - Budget med månedlige grænser og fremdrift
-- CSV-import (understøtter danske bankformater)
+- CSV-import (understøtter Danske Bank og Nordea eksportformater)
 - Konti og kategorier (indstillinger)
 
 ## Kørsel lokalt
