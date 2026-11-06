@@ -1,0 +1,16 @@
+services:
+  budget:
+    build: .
+    container_name: budget
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - budget_data:/app/data
+    environment:
+      - NODE_ENV=production
+      - DATABASE_PATH=/app/data/budget.db
+      - PORT=3000
+
+volumes:
+  budget_data:
