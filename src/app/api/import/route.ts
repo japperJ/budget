@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
   const amtH = findHeader(headers, ["beløb", "belob", "amount", "sum"]);
   const debitH = findHeader(headers, ["træk", "debit", "debet", "udbetaling", "ud"]);
   const creditH = findHeader(headers, ["indbetaling", "credit", "kredit", "ind"]);
-  const descH = findHeader(headers, ["tekst", "posteringstekst", "beskrivelse", "description", "merchant", "modtager", "afsender", "title", "navn", "reference", "ref"]);
+  const descH = findHeader(headers, ["tekst", "posteringstekst", "beskrivelse", "description", "merchant", "modtager", "afsender", "title", "navn", "reference", "ref", "postering", "kontobevægelse", "kontobevaegelse"]);
 
   let imported = 0;
   const errors: string[] = [];

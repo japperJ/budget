@@ -101,6 +101,7 @@ export default function ImportPage() {
             <ul className="mt-2 space-y-1 text-sm text-slate-600 dark:text-slate-300">
               <li><strong>Danske Bank:</strong> Dato, Tekst, Beløb (signed), Saldo</li>
               <li><strong>Nordea:</strong> Bogføringsdato/Valørdato, Tekst/Posteringstekst, Beløb eller separate Debet/Kredit, Saldo</li>
+              <li><strong>Jyske Bank:</strong> Dato, Tekst/Beskrivelse, Beløb (signed), Saldo (Bankdata CSV-format, semikolon-separeret)</li>
               <li>Datoformater: DD-MM-YYYY, DD.MM.YYYY, DD/MM/YYYY</li>
               <li>Talformater: 1.234,56 (dansk) og 1234.56</li>
               <li>Kolonner genkendes automatisk (dato, beløb, beskrivelse, træk/indbetaling, debet/kredit)</li>
