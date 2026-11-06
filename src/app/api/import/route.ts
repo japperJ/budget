@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
   const descH = findHeader(headers, ["tekst", "posteringstekst", "beskrivelse", "description", "merchant", "modtager", "afsender", "title", "navn", "reference", "ref", "postering", "kontobevægelse", "kontobevaegelse"]);
 
   let imported = 0;
+  let skipped = 0;
   const errors: string[] = [];
   for (const row of parsed.data) {
     try {
@@ -106,6 +107,17 @@ export async function POST(req: NextRequest) {
       const description = descH ? String(row[descH] ?? "").trim() : "";
       const suggested = suggestCategoryId(description, cats as any, examples);
 
+      // duplicate check: same account, date, amount, type, description
+      const existing = await db.select().from(schema.transactions);
+      const isDup = existing.some((e: any) =>
+        e.accountId === accountId &&
+        e.date === date &&
+        e.amount === amountCents &&
+        e.type === type &&
+        e.description === description
+      );
+      if (isDup) { skipped++; continue; }
+
       await db.insert(schema.transactions).values({
         accountId,
         date,
@@ -120,5 +132,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ imported, errors: errors.slice(0, 20), total: parsed.data.length });
+  return NextResponse.json({ imported, skipped, errors: errors.slice(0, 20), total: parsed.data.length });
 }

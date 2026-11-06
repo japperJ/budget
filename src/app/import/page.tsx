@@ -81,6 +81,7 @@ export default function ImportPage() {
               <h2 className="font-semibold text-slate-900 dark:text-slate-100">Resultat</h2>
               <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
                 Importeret: <strong className="text-slate-900 dark:text-slate-100">{result.imported}</strong> af {result.total} rækker.
+                {result.skipped > 0 && <span className="ml-2 text-amber-600 dark:text-amber-400">({result.skipped} duplikater sprunget over)</span>}
               </p>
               {result.errors?.length > 0 && (
                 <div className="mt-3">
