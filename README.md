@@ -25,6 +25,9 @@ npm run dev
 - Drizzle ORM + SQLite (lokal fil: data/budget.db)
 - Recharts, PapaParse, date-fns
 
+## Versionering
+Ved hver ændring bumpt version-nummeret i `package.json` (og `src/lib/version.ts`).
+
 ## Fremtidig Vercel + Neon
 Koden bruger Drizzle ORM, så migration til Neon/Postgres er ligetil:
 1. Installer `@neondatabase/serverless`
