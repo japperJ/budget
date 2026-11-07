@@ -90,6 +90,7 @@ export async function POST(req: NextRequest) {
 
   let imported = 0;
   let skipped = 0;
+  const skippedRows: { date: string; description: string; amount: number }[] = [];
   const errors: string[] = [];
   for (const row of parsed.data) {
     try {
@@ -132,7 +133,11 @@ export async function POST(req: NextRequest) {
       const balancePart = balanceH ? String(row[balanceH] ?? "").trim() : "";
       const key = `${accountId}|${date}|${amountCents}|${type}|${description}|${balancePart}`;
       const keyNoBalance = `${accountId}|${date}|${amountCents}|${type}|${description}|`;
-      if (seenKeys.has(key) || seenKeys.has(keyNoBalance)) { skipped++; continue; }
+      if (seenKeys.has(key) || seenKeys.has(keyNoBalance)) {
+        skipped++;
+        skippedRows.push({ date, description, amount: amountCents });
+        continue;
+      }
 
       try {
         await db.insert(schema.transactions).values({
@@ -149,6 +154,7 @@ export async function POST(req: NextRequest) {
       } catch (e: any) {
         if (String(e?.message || "").toLowerCase().includes("unique")) {
           skipped++;
+          skippedRows.push({ date, description, amount: amountCents });
           continue;
         }
         throw e;
@@ -158,5 +164,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ imported, skipped, errors: errors.slice(0, 20), total: parsed.data.length });
+  return NextResponse.json({ imported, skipped, skippedRows, errors: errors.slice(0, 20), total: parsed.data.length });
 }
