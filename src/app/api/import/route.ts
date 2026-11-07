@@ -57,6 +57,8 @@ export async function POST(req: NextRequest) {
   const file = form.get("file") as File | null;
   const accountId = Number(form.get("accountId"));
   const force = form.get("force") === "true";
+  const forceIndicesRaw = form.get("forceIndices") as string | null;
+  const forceIndices = forceIndicesRaw ? forceIndicesRaw.split(",").map(Number).filter((n) => !isNaN(n)) : null;
   if (!file) return NextResponse.json({ error: "file required" }, { status: 400 });
   if (!accountId) return NextResponse.json({ error: "accountId required" }, { status: 400 });
 
@@ -91,9 +93,11 @@ export async function POST(req: NextRequest) {
 
   let imported = 0;
   let skipped = 0;
-  const skippedRows: { date: string; description: string; amount: number }[] = [];
+  const skippedRows: { date: string; description: string; amount: number; index: number }[] = [];
   const errors: string[] = [];
+  let rowIndex = 0;
   for (const row of parsed.data) {
+    const currentIndex = rowIndex++;
     try {
       const date = dateH ? parseDate(row[dateH] ?? "") : null;
       if (!date) { errors.push("missing date: " + JSON.stringify(row)); continue; }
@@ -134,9 +138,12 @@ export async function POST(req: NextRequest) {
       const balancePart = balanceH ? String(row[balanceH] ?? "").trim() : "";
       const key = `${accountId}|${date}|${amountCents}|${type}|${description}|${balancePart}`;
       const keyNoBalance = `${accountId}|${date}|${amountCents}|${type}|${description}|`;
-      if (!force && (seenKeys.has(key) || seenKeys.has(keyNoBalance))) {
+      // If cherry-picking specific rows, skip rows not in the list
+      if (forceIndices && !forceIndices.includes(currentIndex)) { continue; }
+
+      if (!force && !forceIndices && (seenKeys.has(key) || seenKeys.has(keyNoBalance))) {
         skipped++;
-        skippedRows.push({ date, description, amount: amountCents });
+        skippedRows.push({ date, description, amount: amountCents, index: currentIndex });
         continue;
       }
 
@@ -155,7 +162,7 @@ export async function POST(req: NextRequest) {
       } catch (e: any) {
         if (String(e?.message || "").toLowerCase().includes("unique")) {
           skipped++;
-          skippedRows.push({ date, description, amount: amountCents });
+          skippedRows.push({ date, description, amount: amountCents, index: currentIndex });
           continue;
         }
         throw e;
