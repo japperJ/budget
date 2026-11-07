@@ -95,6 +95,26 @@ export default function ImportPage() {
                   </ul>
                 </details>
               )}
+              {result.skipped > 0 && (
+                <button
+                  onClick={async () => {
+                    if (!file) return;
+                    setLoading(true);
+                    const form = new FormData();
+                    form.append("file", file);
+                    form.append("accountId", accountId);
+                    form.append("force", "true");
+                    const res = await fetch("/api/import", { method: "POST", body: form });
+                    const data = await res.json();
+                    setResult(data);
+                    setLoading(false);
+                  }}
+                  disabled={loading}
+                  className="mt-3 inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-amber-700 disabled:opacity-50"
+                >
+                  Importér alligevel ({result.skipped} duplikater)
+                </button>
+              )}
               {result.errors?.length > 0 && (
                 <div className="mt-3">
                   <p className="text-sm font-medium text-red-600">Fejl ({result.errors.length}):</p>

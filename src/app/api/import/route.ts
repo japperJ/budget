@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
   const form = await req.formData();
   const file = form.get("file") as File | null;
   const accountId = Number(form.get("accountId"));
+  const force = form.get("force") === "true";
   if (!file) return NextResponse.json({ error: "file required" }, { status: 400 });
   if (!accountId) return NextResponse.json({ error: "accountId required" }, { status: 400 });
 
@@ -133,7 +134,7 @@ export async function POST(req: NextRequest) {
       const balancePart = balanceH ? String(row[balanceH] ?? "").trim() : "";
       const key = `${accountId}|${date}|${amountCents}|${type}|${description}|${balancePart}`;
       const keyNoBalance = `${accountId}|${date}|${amountCents}|${type}|${description}|`;
-      if (seenKeys.has(key) || seenKeys.has(keyNoBalance)) {
+      if (!force && (seenKeys.has(key) || seenKeys.has(keyNoBalance))) {
         skipped++;
         skippedRows.push({ date, description, amount: amountCents });
         continue;
