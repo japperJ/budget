@@ -64,9 +64,10 @@ export async function POST(req: NextRequest) {
   const existingTxs = await db.select().from(schema.transactions);
   const examples = existingTxs.filter((t: any) => t.categoryId).map((t: any) => ({ description: t.description, categoryId: t.categoryId }));
   // Track existing keys for duplicate detection (avoid O(n²) reloads per row).
-  const seenKeys = new Set(
-    existingTxs.map((e: any) => `${e.accountId}|${e.date}|${e.amount}|${e.type}|${e.description}`)
-  );
+  const seenKeys = new Set<string>();
+  for (const e of existingTxs) {
+    seenKeys.add(`${e.accountId}|${e.date}|${e.amount}|${e.type}|${e.description}|`);
+  }
   const parsed = Papa.parse<Record<string, string>>(text, {
     header: true,
     skipEmptyLines: true,
@@ -83,6 +84,9 @@ export async function POST(req: NextRequest) {
   const debitH = findHeader(headers, ["træk", "debit", "debet", "udbetaling", "ud"]);
   const creditH = findHeader(headers, ["indbetaling", "credit", "kredit", "ind"]);
   const descH = findHeader(headers, ["tekst", "posteringstekst", "beskrivelse", "description", "merchant", "modtager", "afsender", "title", "navn", "reference", "ref", "postering", "kontobevægelse", "kontobevaegelse"]);
+  const balanceH = findHeader(headers, ["saldo", "balance", "delsaldo"]);
+  const catH = findHeader(headers, ["hovedkategori", "kategori", "category"]);
+  const commentH = findHeader(headers, ["kommentar", "comment", "note"]);
 
   let imported = 0;
   let skipped = 0;
@@ -108,12 +112,27 @@ export async function POST(req: NextRequest) {
       }
       if (amountCents === 0) { /* still import zero? skip */ }
 
-      const description = descH ? String(row[descH] ?? "").trim() : "";
-      const suggested = suggestCategoryId(description, cats as any, examples);
+      let description = descH ? String(row[descH] ?? "").trim() : "";
+      if (commentH) {
+        const cmt = String(row[commentH] ?? "").trim();
+        if (cmt) description = description ? `${description} (${cmt})` : cmt;
+      }
+      // Jyske: use Kategori/Hovedkategori column to override suggestion
+      let suggested = suggestCategoryId(description, cats as any, examples);
+      if (catH) {
+        const catName = String(row[catH] ?? "").trim().toLowerCase();
+        if (catName) {
+          const matched = cats.find((c: any) => c.name.toLowerCase() === catName || c.name.toLowerCase().includes(catName));
+          if (matched) suggested = matched.id;
+        }
+      }
 
-      // duplicate check: same account, date, amount, type, description
-      const key = `${accountId}|${date}|${amountCents}|${type}|${description}`;
-      if (seenKeys.has(key)) { skipped++; continue; }
+      // duplicate check: include balance when available to distinguish
+      // legitimate same-day/same-amount transactions
+      const balancePart = balanceH ? String(row[balanceH] ?? "").trim() : "";
+      const key = `${accountId}|${date}|${amountCents}|${type}|${description}|${balancePart}`;
+      const keyNoBalance = `${accountId}|${date}|${amountCents}|${type}|${description}|`;
+      if (seenKeys.has(key) || seenKeys.has(keyNoBalance)) { skipped++; continue; }
 
       try {
         await db.insert(schema.transactions).values({
@@ -125,6 +144,7 @@ export async function POST(req: NextRequest) {
           categoryId: suggested,
         });
         seenKeys.add(key);
+        seenKeys.add(keyNoBalance);
         imported++;
       } catch (e: any) {
         if (String(e?.message || "").toLowerCase().includes("unique")) {

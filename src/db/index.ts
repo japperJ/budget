@@ -21,9 +21,9 @@ if (process.env.DATABASE_URL) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   schema = require("./schema");
 
-  const dataDir = path.join(process.cwd(), "data");
+  const dbPath = process.env.DATABASE_PATH || path.join(process.cwd(), "data", "budget.db");
+  const dataDir = path.dirname(dbPath);
   if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-  const dbPath = path.join(dataDir, "budget.db");
   const sqlite = new Database(dbPath);
   sqlite.pragma("journal_mode = WAL");
   sqlite.pragma("foreign_keys = ON");

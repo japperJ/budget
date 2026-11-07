@@ -4,5 +4,5 @@ export default defineConfig({
   schema: "./src/db/schema.ts",
   out: "./drizzle",
   dialect: "sqlite",
-  dbCredentials: { url: "./data/budget.db" },
+  dbCredentials: { url: process.env.DATABASE_PATH || "./data/budget.db" },
 });

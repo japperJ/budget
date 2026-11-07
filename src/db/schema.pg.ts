@@ -1,7 +1,7 @@
 // PostgreSQL (Neon) variant of the schema for future Vercel deployment.
 // To migrate: install @neondatabase/serverless, point db client at DATABASE_URL,
 // and swap imports from ./schema to ./schema.pg.
-import { pgTable, serial, text, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
 
 export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
@@ -29,9 +29,7 @@ export const transactions = pgTable("transactions", {
   description: text("description").notNull().default(""),
   categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-}, (t) => ({
-  uniqTx: uniqueIndex("uniq_tx").on(t.accountId, t.date, t.amount, t.type, t.description),
-}));
+});
 
 export const budgets = pgTable("budgets", {
   id: serial("id").primaryKey(),
